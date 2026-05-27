@@ -41,6 +41,11 @@ export interface IVocabularyUseCase {
   getProgress(): Observable<WordProgress>;
 }
 
+export interface ILanguageUseCase {
+  getLanguages(): Observable<Language[]>;
+  getLanguage(id: number): Observable<Language>;
+}
+
 export interface IUserUseCase {
   updateProfile(data: UpdateProfileInput): Observable<User>;
   getSkills(): Observable<UserSkill[]>;

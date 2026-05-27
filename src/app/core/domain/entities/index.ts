@@ -39,6 +39,10 @@ export interface Module {
   updated_at: string;
 }
 
+export interface ModulesResponse {
+  modules: Module[]
+}
+
 export interface Lesson {
   id: number;
   module_id: number;
@@ -102,6 +106,10 @@ export interface UserSkill {
   updated_at: string;
 }
 
+export interface UserSkillResponse {
+  skills: UserSkill[];
+}
+
 export interface UserStats {
   id: number;
   user_id: number;
@@ -110,6 +118,10 @@ export interface UserStats {
   last_activity_date: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserStatsResponse {
+  stats: UserStats;
 }
 
 export interface Word {
@@ -165,6 +177,10 @@ export interface WordProgress {
   mastered: number;
   due_for_review: number;
   progress_percentage: number;
+}
+
+export interface WordProgressResponse {
+  progress: WordProgress;
 }
 
 export type LessonType = 'vocabulary' | 'grammar' | 'listening' | 'speaking';

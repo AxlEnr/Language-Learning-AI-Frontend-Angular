@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import { IAuthUseCase, IDashboardUseCase, IModuleUseCase, ILessonUseCase, IProgressUseCase, IAIUseCase, IVocabularyUseCase, IUserUseCase } from '../core/domain/ports/in';
+import { IAuthUseCase, IDashboardUseCase, IModuleUseCase, ILessonUseCase, IProgressUseCase, IAIUseCase, IVocabularyUseCase, IUserUseCase, ILanguageUseCase } from '../core/domain/ports/in';
 import { IAuthRepository, ILanguageRepository, IModuleRepository, ILessonRepository, IProgressRepository, IAIRepository, IVocabularyRepository, IUserRepository, ITokenStorage } from '../core/domain/ports/out';
 
 export const AUTH_USE_CASE = new InjectionToken<IAuthUseCase>('AUTH_USE_CASE');
@@ -10,6 +10,7 @@ export const PROGRESS_USE_CASE = new InjectionToken<IProgressUseCase>('PROGRESS_
 export const AI_USE_CASE = new InjectionToken<IAIUseCase>('AI_USE_CASE');
 export const VOCABULARY_USE_CASE = new InjectionToken<IVocabularyUseCase>('VOCABULARY_USE_CASE');
 export const USER_USE_CASE = new InjectionToken<IUserUseCase>('USER_USE_CASE');
+export const LANGUAGE_USE_CASE = new InjectionToken<ILanguageUseCase>('LANGUAGE_USE_CASE');
 
 export const AUTH_REPOSITORY = new InjectionToken<IAuthRepository>('AUTH_REPOSITORY');
 export const LANGUAGE_REPOSITORY = new InjectionToken<ILanguageRepository>('LANGUAGE_REPOSITORY');

@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SKIP_TOAST } from './toast.interceptor';
+
+export interface RequestOptions {
+  requireAuth?: boolean;
+  skipToast?: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class HttpClientAdapter {
@@ -9,20 +15,27 @@ export class HttpClientAdapter {
 
   constructor(private readonly http: HttpClient) {}
 
-  get<T>(path: string, requireAuth = true): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}${path}`, { headers: this.headers(requireAuth) });
+  get<T>(path: string, options?: RequestOptions): Observable<T> {
+    return this.http.get<T>(`${this.baseUrl}${path}`, this.buildOptions(options));
   }
 
-  post<T>(path: string, body: unknown, requireAuth = true): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${path}`, body, { headers: this.headers(requireAuth) });
+  post<T>(path: string, body: unknown, options?: RequestOptions): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}${path}`, body, this.buildOptions(options));
   }
 
-  put<T>(path: string, body: unknown, requireAuth = true): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}${path}`, body, { headers: this.headers(requireAuth) });
+  put<T>(path: string, body: unknown, options?: RequestOptions): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}${path}`, body, this.buildOptions(options));
   }
 
-  delete<T>(path: string, requireAuth = true): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${path}`, { headers: this.headers(requireAuth) });
+  delete<T>(path: string, options?: RequestOptions): Observable<T> {
+    return this.http.delete<T>(`${this.baseUrl}${path}`, this.buildOptions(options));
+  }
+
+  private buildOptions(options?: RequestOptions): { headers: HttpHeaders; context: HttpContext } {
+    const requireAuth = options?.requireAuth ?? true;
+    const skipToast = options?.skipToast ?? false;
+    const context = new HttpContext().set(SKIP_TOAST, skipToast);
+    return { headers: this.headers(requireAuth), context };
   }
 
   private headers(requireAuth: boolean): HttpHeaders {

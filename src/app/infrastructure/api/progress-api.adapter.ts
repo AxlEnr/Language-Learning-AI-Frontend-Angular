@@ -9,18 +9,18 @@ export class ProgressApiAdapter implements IProgressRepository {
   constructor(private readonly http: HttpClientAdapter) {}
 
   getOverview(): Observable<UserLessonProgress[]> {
-    return this.http.get<UserLessonProgress[]>('/progress');
+    return this.http.get<UserLessonProgress[]>('/progress', { requireAuth: true });
   }
 
   startLesson(lessonId: number): Observable<UserLessonProgress> {
-    return this.http.post<UserLessonProgress>('/progress/start', { lesson_id: lessonId });
+    return this.http.post<UserLessonProgress>('/progress/start', { lesson_id: lessonId }, { requireAuth: true });
   }
 
   submitAnswer(exerciseId: number, answer: string): Observable<UserAnswer> {
-    return this.http.post<UserAnswer>('/progress/answer', { exercise_id: exerciseId, answer });
+    return this.http.post<UserAnswer>('/progress/answer', { exercise_id: exerciseId, answer }, { requireAuth: true });
   }
 
   completeLesson(lessonId: number, score: number): Observable<UserLessonProgress> {
-    return this.http.post<UserLessonProgress>(`/progress/lessons/${lessonId}/complete`, { score });
+    return this.http.post<UserLessonProgress>(`/progress/lessons/${lessonId}/complete`, { score }, { requireAuth: true });
   }
 }

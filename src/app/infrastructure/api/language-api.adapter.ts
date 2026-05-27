@@ -9,11 +9,11 @@ export class LanguageApiAdapter implements ILanguageRepository {
   constructor(private readonly http: HttpClientAdapter) {}
 
   getLanguages(): Observable<Language[]> {
-    return this.http.get<LanguagesResponse>('/languages', false).pipe(
+    return this.http.get<LanguagesResponse>('/languages', { requireAuth: false }).pipe(
       map((response) => response.languages)
     );
   }
   getLanguage(id: number): Observable<Language> {
-    return this.http.get<Language>(`/languages/${id}`, false);
+    return this.http.get<Language>(`/languages/${id}`, { requireAuth: false });
   }
 }

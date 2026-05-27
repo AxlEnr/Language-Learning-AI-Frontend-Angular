@@ -9,6 +9,6 @@ export class LessonApiAdapter implements ILessonRepository {
   constructor(private readonly http: HttpClientAdapter) {}
 
   getLesson(id: number): Observable<Lesson> {
-    return this.http.get<Lesson>(`/lessons/${id}`);
+    return this.http.get<Lesson>(`/lessons/${id}`, { requireAuth: true });
   }
 }

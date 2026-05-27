@@ -1,6 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IModuleUseCase, IProgressUseCase } from '../../../core/domain/ports/in';
 import { MODULE_USE_CASE, PROGRESS_USE_CASE } from '../../../di/tokens';
 import { Module, UserLessonProgress } from '../../../core/domain/entities';
@@ -51,19 +52,27 @@ import { LESSON_TYPE_LABELS, PROGRESS_STATUS_LABELS } from '../../../core/domain
   `],
 })
 export class ModuleDetailPageComponent implements OnInit {
-  module: Module | null = null; progressMap: Record<number, UserLessonProgress | undefined> = {};
-  LESSON_TYPE_LABELS = LESSON_TYPE_LABELS; PROGRESS_STATUS_LABELS = PROGRESS_STATUS_LABELS;
+  module: Module | null = null;
+  progressMap: Record<number, UserLessonProgress | undefined> = {};
+  LESSON_TYPE_LABELS = LESSON_TYPE_LABELS;
+  PROGRESS_STATUS_LABELS = PROGRESS_STATUS_LABELS;
 
   constructor(
     private readonly route: ActivatedRoute,
     @Inject(MODULE_USE_CASE) private readonly moduleUseCase: IModuleUseCase,
     @Inject(PROGRESS_USE_CASE) private readonly progressUseCase: IProgressUseCase,
+    private readonly destroyRef: DestroyRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.moduleUseCase.getModule(id).subscribe({ next: (data) => this.module = data, error: () => {} });
-    this.progressUseCase.getOverview().subscribe({ next: (p) => p.forEach((x) => this.progressMap = { ...this.progressMap, [x.lesson_id]: x }), error: () => {} });
+    this.moduleUseCase.getModule(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (data) => { this.module = data; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+    this.progressUseCase.getOverview()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (p) => { p.forEach((x) => this.progressMap = { ...this.progressMap, [x.lesson_id]: x }); this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
   }
 
   getProgress(lessonId: number): UserLessonProgress | undefined { return this.progressMap[lessonId]; }

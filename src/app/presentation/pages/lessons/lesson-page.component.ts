@@ -1,7 +1,8 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ILessonUseCase, IProgressUseCase } from '../../../core/domain/ports/in';
 import { LESSON_USE_CASE, PROGRESS_USE_CASE } from '../../../di/tokens';
 import { Lesson, Exercise } from '../../../core/domain/entities';
@@ -66,9 +67,19 @@ import { LESSON_TYPE_LABELS } from '../../../core/domain/enums';
   `],
 })
 export class LessonPageComponent implements OnInit {
-  lesson: Lesson | null = null; lessonStarted = false; currentIndex = 0; currentExercise: Exercise | null = null;
-  selectedAnswer = ''; submitted = false; submitting = false; feedback = ''; lastCorrect = false;
-  correctCount = 0; completed = false; finalScore = 0; starting = false;
+  lesson: Lesson | null = null;
+  lessonStarted = false;
+  currentIndex = 0;
+  currentExercise: Exercise | null = null;
+  selectedAnswer = '';
+  submitted = false;
+  submitting = false;
+  feedback = '';
+  lastCorrect = false;
+  correctCount = 0;
+  completed = false;
+  finalScore = 0;
+  starting = false;
   LESSON_TYPE_LABELS = LESSON_TYPE_LABELS;
   EXERCISE_LABELS: Record<string, string> = { multiple_choice: 'Multiple Choice', fill_blank: 'Fill in the Blank', translation: 'Translation', speaking: 'Speaking', ai_chat: 'AI Chat' };
 
@@ -76,6 +87,8 @@ export class LessonPageComponent implements OnInit {
     private readonly route: ActivatedRoute,
     @Inject(LESSON_USE_CASE) private readonly lessonUseCase: ILessonUseCase,
     @Inject(PROGRESS_USE_CASE) private readonly progressUseCase: IProgressUseCase,
+    private readonly destroyRef: DestroyRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   get progressPercent(): number {
@@ -85,28 +98,37 @@ export class LessonPageComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.lessonUseCase.getLesson(id).subscribe({ next: (data) => { this.lesson = data; if (data.exercises?.length) this.currentExercise = data.exercises[0]; }, error: () => {} });
+    this.lessonUseCase.getLesson(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (data) => { this.lesson = data; if (data.exercises?.length) this.currentExercise = data.exercises[0]; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
   }
 
   startLesson(): void {
     if (!this.lesson) return;
     this.starting = true;
-    this.progressUseCase.startLesson(this.lesson.id).subscribe({ next: () => { this.lessonStarted = true; this.starting = false; }, error: () => { this.lessonStarted = true; this.starting = false; } });
+    this.progressUseCase.startLesson(this.lesson.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => { this.lessonStarted = true; this.starting = false; this.cdr.detectChanges(); }, error: () => { this.lessonStarted = true; this.starting = false; this.cdr.detectChanges(); } });
   }
 
   submitAnswer(): void {
     if (!this.currentExercise || !this.selectedAnswer || this.submitting) return;
     this.submitting = true;
-    this.progressUseCase.submitAnswer(this.currentExercise.id, this.selectedAnswer).subscribe({
-      next: (r) => { this.submitted = true; this.submitting = false; this.lastCorrect = r.is_correct ?? false; this.feedback = r.feedback || (this.lastCorrect ? 'Correct!' : 'Incorrect.'); if (this.lastCorrect) this.correctCount++; },
-      error: () => { this.submitting = false; this.submitted = true; this.lastCorrect = false; this.feedback = 'Failed to submit.'; },
-    });
+    this.progressUseCase.submitAnswer(this.currentExercise.id, this.selectedAnswer)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (r) => { this.submitted = true; this.submitting = false; this.lastCorrect = r.is_correct ?? false; this.feedback = r.feedback || (this.lastCorrect ? 'Correct!' : 'Incorrect.'); if (this.lastCorrect) this.correctCount++; this.cdr.detectChanges(); },
+        error: () => { this.submitting = false; this.submitted = true; this.lastCorrect = false; this.feedback = 'Failed to submit.'; this.cdr.detectChanges(); },
+      });
   }
 
   nextExercise(): void {
     if (!this.lesson?.exercises) return;
-    this.currentIndex++; this.currentExercise = this.lesson.exercises[this.currentIndex];
-    this.selectedAnswer = ''; this.submitted = false; this.feedback = '';
+    this.currentIndex++;
+    this.currentExercise = this.lesson.exercises[this.currentIndex];
+    this.selectedAnswer = '';
+    this.submitted = false;
+    this.feedback = '';
   }
 
   optionIndex(i: number): string { return i.toString(); }
@@ -115,6 +137,8 @@ export class LessonPageComponent implements OnInit {
     if (!this.lesson) return;
     const total = this.lesson.exercises?.length || 1;
     const score = Math.round((this.correctCount / total) * 100);
-    this.progressUseCase.completeLesson(this.lesson.id, score).subscribe({ next: () => { this.completed = true; this.finalScore = score; }, error: () => { this.completed = true; this.finalScore = score; } });
+    this.progressUseCase.completeLesson(this.lesson.id, score)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => { this.completed = true; this.finalScore = score; this.cdr.detectChanges(); }, error: () => { this.completed = true; this.finalScore = score; this.cdr.detectChanges(); } });
   }
 }

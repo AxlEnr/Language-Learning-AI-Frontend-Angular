@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType } from '../../entities';
+import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType, UserSkillResponse, UserStatsResponse, ModulesResponse, WordProgressResponse } from '../../entities';
 import { RegisterInput, LoginInput, UpdateProfileInput } from '../in';
 
 export interface IAuthRepository {
@@ -15,7 +15,7 @@ export interface ILanguageRepository {
 }
 
 export interface IModuleRepository {
-  getModules(filters?: { language_id?: number; level_id?: number }): Observable<Module[]>;
+  getModules(filters?: { language_id?: number; level_id?: number }): Observable<ModulesResponse>;
   getModule(id: number): Observable<Module>;
 }
 
@@ -42,13 +42,13 @@ export interface IVocabularyRepository {
   reviewWord(userWordId: number, wasCorrect: boolean): Observable<UserWord>;
   addWord(wordId: number): Observable<UserWord>;
   getMasteredWords(): Observable<UserWord[]>;
-  getProgress(): Observable<WordProgress>;
+  getProgress(): Observable<WordProgressResponse>;
 }
 
 export interface IUserRepository {
   updateProfile(data: UpdateProfileInput): Observable<User>;
-  getSkills(): Observable<UserSkill[]>;
-  getStats(): Observable<UserStats>;
+  getSkills(): Observable<UserSkillResponse>;
+  getStats(): Observable<UserStatsResponse>;
 }
 
 export interface ITokenStorage {

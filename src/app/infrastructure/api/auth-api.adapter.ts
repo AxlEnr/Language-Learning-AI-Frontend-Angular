@@ -10,18 +10,18 @@ export class AuthApiAdapter implements IAuthRepository {
   constructor(private readonly http: HttpClientAdapter) {}
 
   register(data: RegisterInput): Observable<{ user: User; token: string }> {
-    return this.http.post<{ user: User; token: string }>('/auth/register', data, false);
+    return this.http.post<{ user: User; token: string }>('/auth/register', data, { requireAuth: false, skipToast: true });
   }
 
   login(data: LoginInput): Observable<{ user: User; token: string }> {
-    return this.http.post<{ user: User; token: string }>('/auth/login', data, false);
+    return this.http.post<{ user: User; token: string }>('/auth/login', data, { requireAuth: false, skipToast: true });
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>('/auth/logout', {});
+    return this.http.post<void>('/auth/logout', {}, { requireAuth: true });
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>('/auth/user');
+    return this.http.get<User>('/auth/user', { requireAuth: true });
   }
 }

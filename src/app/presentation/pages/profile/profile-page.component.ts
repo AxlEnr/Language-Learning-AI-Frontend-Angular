@@ -1,11 +1,11 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IUserUseCase, IAuthUseCase } from '../../../core/domain/ports/in';
-import { USER_USE_CASE, AUTH_USE_CASE } from '../../../di/tokens';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { IUserUseCase, IAuthUseCase, ILanguageUseCase } from '../../../core/domain/ports/in';
+import { USER_USE_CASE, AUTH_USE_CASE, LANGUAGE_USE_CASE } from '../../../di/tokens';
 import { User, UserSkill, UserStats, Language } from '../../../core/domain/entities';
 import { SKILL_LABELS } from '../../../core/domain/enums';
-import { LanguageApiAdapter } from '../../../infrastructure/api/language-api.adapter';
 
 @Component({
   selector: 'app-profile-page',
@@ -19,7 +19,6 @@ import { LanguageApiAdapter } from '../../../infrastructure/api/language-api.ada
           <div class="form-group"><label>Name</label><input type="text" [(ngModel)]="profileData.name" name="name" /></div>
           <div class="form-group"><label>Target Language</label><select [(ngModel)]="profileData.target_language_id" name="target_language_id"><option *ngFor="let lang of languages" [ngValue]="lang.id">{{ lang.name }}</option></select></div>
           <button type="submit" class="btn btn-primary" [disabled]="saving"><span *ngIf="saving" class="spinner"></span> {{ saving ? 'Saving...' : 'Save Changes' }}</button>
-          <span class="text-success ml-1" *ngIf="saved">Saved!</span>
         </form>
       </div>
       <div class="card mb-3"><h3 class="mb-2">Skills</h3>
@@ -50,24 +49,39 @@ import { LanguageApiAdapter } from '../../../infrastructure/api/language-api.ada
 })
 export class ProfilePageComponent implements OnInit {
   profileData = { name: '', target_language_id: null as number | null };
-  skills: UserSkill[] = []; stats: UserStats | null = null; languages: Language[] = []; saving = false; saved = false;
+  skills: UserSkill[] = [];
+  stats: UserStats | null = null;
+  languages: Language[] = [];
+  saving = false;
   SKILL_LABELS = SKILL_LABELS;
 
   constructor(
     @Inject(USER_USE_CASE) private readonly userUseCase: IUserUseCase,
     @Inject(AUTH_USE_CASE) private readonly authUseCase: IAuthUseCase,
-    private readonly languageApi: LanguageApiAdapter,
+    @Inject(LANGUAGE_USE_CASE) private readonly languageUseCase: ILanguageUseCase,
+    private readonly destroyRef: DestroyRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    this.languageApi.getLanguages().subscribe({ next: (l) => this.languages = l, error: () => {} });
-    this.authUseCase.getCurrentUser().subscribe({ next: (u) => this.profileData = { name: u.name, target_language_id: u.target_language_id }, error: () => {} });
-    this.userUseCase.getSkills().subscribe({ next: (s) => this.skills = s, error: () => {} });
-    this.userUseCase.getStats().subscribe({ next: (s) => this.stats = s, error: () => {} });
+    this.languageUseCase.getLanguages()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (l) => { this.languages = l; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+    this.authUseCase.getCurrentUser()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (u) => { this.profileData = { name: u.name, target_language_id: u.target_language_id }; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+    this.userUseCase.getSkills()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => { this.skills = s; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+    this.userUseCase.getStats()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => { this.stats = s; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
   }
 
   updateProfile(): void {
-    this.saving = true; this.saved = false;
-    this.userUseCase.updateProfile({ name: this.profileData.name, target_language_id: this.profileData.target_language_id }).subscribe({ next: () => { this.saving = false; this.saved = true; setTimeout(() => this.saved = false, 3000); }, error: () => this.saving = false });
+    this.saving = true;
+    this.userUseCase.updateProfile({ name: this.profileData.name, target_language_id: this.profileData.target_language_id })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => { this.saving = false; this.cdr.detectChanges(); }, error: () => { this.saving = false; this.cdr.detectChanges(); } });
   }
 }

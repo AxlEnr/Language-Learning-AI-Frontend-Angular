@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { IUserRepository } from '../../core/domain/ports/out';
-import { User, UserSkill, UserStats } from '../../core/domain/entities';
+import { User, UserSkill, UserSkillResponse, UserStats, UserStatsResponse } from '../../core/domain/entities';
 import { HttpClientAdapter } from './http-client.adapter';
 import { UpdateProfileInput } from '../../core/domain/ports/in';
 
@@ -10,14 +10,14 @@ export class UserApiAdapter implements IUserRepository {
   constructor(private readonly http: HttpClientAdapter) {}
 
   updateProfile(data: UpdateProfileInput): Observable<User> {
-    return this.http.put<User>('/user/profile', data);
+    return this.http.put<User>('/user/profile', data, { requireAuth: true });
   }
 
-  getSkills(): Observable<UserSkill[]> {
-    return this.http.get<UserSkill[]>('/user/skills');
+  getSkills(): Observable<UserSkillResponse> {
+    return this.http.get<UserSkillResponse>('/user/skills', { requireAuth: true });
   }
 
-  getStats(): Observable<UserStats> {
-    return this.http.get<UserStats>('/user/stats');
+  getStats(): Observable<UserStatsResponse> {
+    return this.http.get<UserStatsResponse>('/user/stats', { requireAuth: true });
   }
 }

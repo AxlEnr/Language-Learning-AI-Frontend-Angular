@@ -1,9 +1,10 @@
-import { Component, Inject, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild, ElementRef, AfterViewChecked, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IAIUseCase } from '../../../core/domain/ports/in';
 import { AI_USE_CASE } from '../../../di/tokens';
-import { AIConversation, AIMessage } from '../../../core/domain/entities';
+import { AIConversation } from '../../../core/domain/entities';
 
 @Component({
   selector: 'app-ai-chat-page',
@@ -55,37 +56,60 @@ import { AIConversation, AIMessage } from '../../../core/domain/entities';
 })
 export class AIChatPageComponent implements OnInit, AfterViewChecked {
   @ViewChild('chatMessages') private chatMessagesRef!: ElementRef;
-  conversations: AIConversation[] = []; activeConversation: AIConversation | null = null;
-  newMessage = ''; sending = false; creatingNew = false; loadingMessages = false;
+  conversations: AIConversation[] = [];
+  activeConversation: AIConversation | null = null;
+  newMessage = '';
+  sending = false;
+  creatingNew = false;
+  loadingMessages = false;
 
-  constructor(@Inject(AI_USE_CASE) private readonly aiUseCase: IAIUseCase) {}
+  constructor(
+    @Inject(AI_USE_CASE) private readonly aiUseCase: IAIUseCase,
+    private readonly destroyRef: DestroyRef,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
-  ngOnInit(): void { this.aiUseCase.listConversations().subscribe({ next: (c) => this.conversations = c, error: () => {} }); }
+  ngOnInit(): void {
+    this.aiUseCase.listConversations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (c) => { this.conversations = c; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+  }
+
   ngAfterViewChecked(): void { this.scrollToBottom(); }
 
   private scrollToBottom(): void { try { const el = this.chatMessagesRef?.nativeElement; if (el) el.scrollTop = el.scrollHeight; } catch {} }
 
   newConversation(): void {
     this.creatingNew = true;
-    this.aiUseCase.startConversation().subscribe({ next: (c) => { this.conversations.unshift(c); this.selectConversation(c); this.creatingNew = false; }, error: () => this.creatingNew = false });
+    this.aiUseCase.startConversation()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (c) => { this.conversations.unshift(c); this.selectConversation(c); this.creatingNew = false; this.cdr.detectChanges(); }, error: () => { this.creatingNew = false; this.cdr.detectChanges(); } });
   }
 
   selectConversation(conv: AIConversation): void {
-    this.loadingMessages = true; this.activeConversation = conv;
-    this.aiUseCase.getConversation(conv.id).subscribe({ next: (c) => { this.activeConversation = c; this.loadingMessages = false; }, error: () => this.loadingMessages = false });
+    this.loadingMessages = true;
+    this.activeConversation = conv;
+    this.aiUseCase.getConversation(conv.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (c) => { this.activeConversation = c; this.loadingMessages = false; this.cdr.detectChanges(); }, error: () => { this.loadingMessages = false; this.cdr.detectChanges(); } });
   }
 
   sendMessage(): void {
     if (!this.newMessage.trim() || !this.activeConversation || this.sending) return;
-    const msg = this.newMessage.trim(); this.newMessage = ''; this.sending = true;
+    const msg = this.newMessage.trim();
+    this.newMessage = '';
+    this.sending = true;
     const conv = this.activeConversation;
     if (!conv.messages) conv.messages = [];
     conv.messages.push({ id: 0, conversation_id: conv.id, role: 'user', message: msg, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-    this.aiUseCase.sendMessage(conv.id, msg).subscribe({ next: (r) => {
-      if (!this.activeConversation) this.activeConversation = conv;
-      if (!this.activeConversation.messages) this.activeConversation.messages = [];
-      this.activeConversation.messages.push({ id: 0, conversation_id: conv.id, role: 'assistant', message: r.message, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-      this.sending = false;
-    }, error: () => this.sending = false });
+    this.aiUseCase.sendMessage(conv.id, msg)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (r) => {
+        if (!this.activeConversation) this.activeConversation = conv;
+        if (!this.activeConversation.messages) this.activeConversation.messages = [];
+        this.activeConversation.messages.push({ id: 0, conversation_id: conv.id, role: 'assistant', message: r.message, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        this.sending = false;
+        this.cdr.detectChanges();
+      }, error: () => { this.sending = false; this.cdr.detectChanges(); } });
   }
 }

@@ -1,5 +1,6 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IVocabularyUseCase } from '../../../core/domain/ports/in';
 import { VOCABULARY_USE_CASE } from '../../../di/tokens';
 import { UserWord, WordProgress } from '../../../core/domain/entities';
@@ -54,20 +55,36 @@ import { UserWord, WordProgress } from '../../../core/domain/entities';
   `],
 })
 export class VocabularyPageComponent implements OnInit {
-  reviewWords: UserWord[] = []; masteredWords: UserWord[] = []; wordProgress: WordProgress | null = null; loading = true; activeTab: 'review' | 'mastered' = 'review';
+  reviewWords: UserWord[] = [];
+  masteredWords: UserWord[] = [];
+  wordProgress: WordProgress | null = null;
+  loading = true;
+  activeTab: 'review' | 'mastered' = 'review';
 
-  constructor(@Inject(VOCABULARY_USE_CASE) private readonly vocUseCase: IVocabularyUseCase) {}
+  constructor(
+    @Inject(VOCABULARY_USE_CASE) private readonly vocUseCase: IVocabularyUseCase,
+    private readonly destroyRef: DestroyRef,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void { this.loadData(); }
 
   loadData(): void {
     this.loading = true;
-    this.vocUseCase.getWordsForReview().subscribe({ next: (w) => { this.reviewWords = w; this.loading = false; }, error: () => this.loading = false });
-    this.vocUseCase.getMasteredWords().subscribe({ next: (w) => this.masteredWords = w, error: () => {} });
-    this.vocUseCase.getProgress().subscribe({ next: (p) => this.wordProgress = p, error: () => {} });
+    this.vocUseCase.getWordsForReview()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (w) => { this.reviewWords = w; this.loading = false; this.cdr.detectChanges(); }, error: () => { this.loading = false; this.cdr.detectChanges(); } });
+    this.vocUseCase.getMasteredWords()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (w) => { this.masteredWords = w; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+    this.vocUseCase.getProgress()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (p) => { this.wordProgress = p; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
   }
 
   reviewWord(userWordId: number, wasCorrect: boolean): void {
-    this.vocUseCase.reviewWord(userWordId, wasCorrect).subscribe({ next: () => this.loadData(), error: () => {} });
+    this.vocUseCase.reviewWord(userWordId, wasCorrect)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.loadData(), error: () => {} });
   }
 }

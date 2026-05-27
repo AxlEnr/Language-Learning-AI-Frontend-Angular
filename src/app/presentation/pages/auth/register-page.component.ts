@@ -1,12 +1,11 @@
-import { Component, DestroyRef, Inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, Inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IAuthUseCase } from '../../../core/domain/ports/in';
-import { AUTH_USE_CASE } from '../../../di/tokens';
-import { LanguageApiAdapter } from '../../../infrastructure/api/language-api.adapter';
-import { Language, LanguagesResponse } from '../../../core/domain/entities';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { IAuthUseCase, ILanguageUseCase } from '../../../core/domain/ports/in';
+import { AUTH_USE_CASE, LANGUAGE_USE_CASE } from '../../../di/tokens';
+import { Language } from '../../../core/domain/entities';
 
 @Component({
   selector: 'app-register-page',
@@ -56,58 +55,55 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .alert-error { background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.2); color: var(--error); }
   `],
 })
-
-export class RegisterPageComponent implements OnInit {
-  name = ''; email = ''; password = ''; password_confirmation = ''; target_language_id: number | null = null;
-  languages: Language[] = []; loading = false; error = '';
+export class RegisterPageComponent {
+  name = '';
+  email = '';
+  password = '';
+  password_confirmation = '';
+  target_language_id: number | null = null;
+  languages: Language[] = [];
+  loading = false;
+  error = '';
 
   constructor(
     private readonly router: Router,
     @Inject(AUTH_USE_CASE) private readonly authUseCase: IAuthUseCase,
-    // ⚠️ AÚN TIENES DEUDA TÉCNICA AQUÍ (Arquitectura Hexagonal)
-    private readonly languageApi: LanguageApiAdapter, 
-    private readonly destroyRef: DestroyRef 
+    @Inject(LANGUAGE_USE_CASE) private readonly languageUseCase: ILanguageUseCase,
+    private readonly destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
-    this.languageApi.getLanguages()
-      .pipe(takeUntilDestroyed(this.destroyRef)) 
-      .subscribe({ 
-          next: (langs) => {
-              this.languages = langs; 
-          }, 
-          error: () => {
-              this.error = 'Failed to load languages.';
-          }
-      });
+    this.languageUseCase.getLanguages()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (langs) => { this.languages = langs; }, error: () => { this.error = 'Failed to load languages.'; } });
   }
 
   register(): void {
-    if (!this.name || !this.email || !this.password || !this.password_confirmation || !this.target_language_id) { 
-      this.error = 'Please fill in all fields.'; 
-      return; 
+    if (!this.name || !this.email || !this.password || !this.password_confirmation || !this.target_language_id) {
+      this.error = 'Please fill in all fields.';
+      return;
     }
-    if (this.password !== this.password_confirmation) { 
-      this.error = 'Passwords do not match.'; 
-      return; 
+    if (this.password !== this.password_confirmation) {
+      this.error = 'Passwords do not match.';
+      return;
     }
-    
-    this.loading = true; 
+
+    this.loading = true;
     this.error = '';
-    
-    this.authUseCase.register({ 
-      name: this.name, 
-      email: this.email, 
-      password: this.password, 
-      password_confirmation: this.password_confirmation, 
-      target_language_id: this.target_language_id 
+
+    this.authUseCase.register({
+      name: this.name,
+      email: this.email,
+      password: this.password,
+      password_confirmation: this.password_confirmation,
+      target_language_id: this.target_language_id,
     })
-    .pipe(takeUntilDestroyed(this.destroyRef)) 
+    .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: (err) => { 
-        this.error = err?.error?.message || 'Registration failed.'; 
-        this.loading = false; 
+      error: (err) => {
+        this.error = err?.error?.message || 'Registration failed.';
+        this.loading = false;
       },
     });
   }

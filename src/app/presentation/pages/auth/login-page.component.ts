@@ -1,7 +1,8 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, DestroyRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IAuthUseCase } from '../../../core/domain/ports/in';
 import { AUTH_USE_CASE } from '../../../di/tokens';
 
@@ -39,19 +40,26 @@ import { AUTH_USE_CASE } from '../../../di/tokens';
   `],
 })
 export class LoginPageComponent {
-  email = ''; password = ''; loading = false; error = '';
+  email = '';
+  password = '';
+  loading = false;
+  error = '';
 
   constructor(
     private readonly router: Router,
     @Inject(AUTH_USE_CASE) private readonly authUseCase: IAuthUseCase,
+    private readonly destroyRef: DestroyRef,
   ) {}
 
   login(): void {
     if (!this.email || !this.password) { this.error = 'Please fill in all fields.'; return; }
-    this.loading = true; this.error = '';
-    this.authUseCase.login({ email: this.email, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: (err) => { this.error = err?.error?.message || 'Invalid credentials.'; this.loading = false; },
-    });
+    this.loading = true;
+    this.error = '';
+    this.authUseCase.login({ email: this.email, password: this.password })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.router.navigate(['/dashboard']),
+        error: (err) => { this.error = err?.error?.message || 'Invalid credentials.'; this.loading = false; },
+      });
   }
 }
