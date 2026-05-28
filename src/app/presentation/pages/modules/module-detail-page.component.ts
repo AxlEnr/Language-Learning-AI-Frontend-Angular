@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IModuleUseCase, IProgressUseCase } from '../../../core/domain/ports/in';
 import { MODULE_USE_CASE, PROGRESS_USE_CASE } from '../../../di/tokens';
-import { Module, UserLessonProgress } from '../../../core/domain/entities';
+import { Module, UserLessonProgress, UserLessonProgressResponse } from '../../../core/domain/entities';
 import { LESSON_TYPE_LABELS, PROGRESS_STATUS_LABELS } from '../../../core/domain/enums';
 
 @Component({
@@ -28,7 +28,11 @@ import { LESSON_TYPE_LABELS, PROGRESS_STATUS_LABELS } from '../../../core/domain
                 </div>
               </div>
             </div>
-            <a [routerLink]="['/lessons', lesson.id]" class="btn btn-primary btn-sm">Start</a>
+            @if (getProgress(lesson.id)?.status == 'completed') {
+              <span class="status-badge completed">Completed</span>
+            } @else {
+              <a [routerLink]="['/lessons', lesson.id]" class="btn btn-primary btn-sm">Start</a>
+            }
           </div>
         </div>
       </div>
@@ -63,7 +67,7 @@ export class ModuleDetailPageComponent implements OnInit {
     @Inject(PROGRESS_USE_CASE) private readonly progressUseCase: IProgressUseCase,
     private readonly destroyRef: DestroyRef,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -72,8 +76,10 @@ export class ModuleDetailPageComponent implements OnInit {
       .subscribe({ next: (data) => { this.module = data; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
     this.progressUseCase.getOverview()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (p) => { p.forEach((x) => this.progressMap = { ...this.progressMap, [x.lesson_id]: x }); this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+      .subscribe({ next: (p: UserLessonProgressResponse) => { p.progress.forEach((x) => this.progressMap = { ...this.progressMap, [x.lesson.id]: x }); this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
   }
 
-  getProgress(lessonId: number): UserLessonProgress | undefined { return this.progressMap[lessonId]; }
+  getProgress(lessonId: number): UserLessonProgress | undefined {
+    return this.progressMap[lessonId];
+  }
 }

@@ -2,14 +2,14 @@ import { Injectable, Inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { IProgressRepository } from '../domain/ports/out';
 import { IProgressUseCase } from '../domain/ports/in';
-import { UserLessonProgress, UserAnswer } from '../domain/entities';
+import { UserLessonProgress, UserAnswer, UserAnswerResponse, UserLessonProgressResponse } from '../domain/entities';
 import { PROGRESS_REPOSITORY } from '../../di/tokens';
 
 @Injectable()
 export class ProgressUseCase implements IProgressUseCase {
-  constructor(@Inject(PROGRESS_REPOSITORY) private readonly progressRepo: IProgressRepository) {}
+  constructor(@Inject(PROGRESS_REPOSITORY) private readonly progressRepo: IProgressRepository) { }
 
-  getOverview(): Observable<UserLessonProgress[]> {
+  getOverview(): Observable<UserLessonProgressResponse> {
     return this.progressRepo.getOverview();
   }
 
@@ -17,7 +17,7 @@ export class ProgressUseCase implements IProgressUseCase {
     return this.progressRepo.startLesson(lessonId);
   }
 
-  submitAnswer(exerciseId: number, answer: string): Observable<UserAnswer> {
+  submitAnswer(exerciseId: number, answer: string): Observable<UserAnswerResponse> {
     return this.progressRepo.submitAnswer(exerciseId, answer);
   }
 

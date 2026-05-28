@@ -55,6 +55,10 @@ export interface Lesson {
   updated_at: string;
 }
 
+export interface LessonResponse {
+  lesson: Lesson;
+}
+
 export interface Exercise {
   id: number;
   lesson_id: number;
@@ -77,12 +81,25 @@ export interface ExerciseMetadata {
 export interface UserLessonProgress {
   id: number;
   user_id: number;
-  lesson_id: number;
+  lesson: Lesson;
   status: ProgressStatus;
   score: number;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface OverviewProgress {
+  total_lesson: number;
+  completed: number;
+  in_progress: number;
+  locked: number;
+  average_score: number;
+  completion_percentage: number;
+}
+export interface UserLessonProgressResponse {
+  overview: OverviewProgress;
+  progress: UserLessonProgress[];
 }
 
 export interface UserAnswer {
@@ -94,6 +111,10 @@ export interface UserAnswer {
   feedback: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserAnswerResponse {
+  answer: UserAnswer;
 }
 
 export interface UserSkill {

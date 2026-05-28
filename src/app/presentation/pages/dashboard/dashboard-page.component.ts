@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop'; // 👈 Importante para el ciclo de vida
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IDashboardUseCase, IAIUseCase } from '../../../core/domain/ports/in';
 import { DASHBOARD_USE_CASE, AI_USE_CASE } from '../../../di/tokens';
 import { Dashboard, Lesson } from '../../../core/domain/entities';

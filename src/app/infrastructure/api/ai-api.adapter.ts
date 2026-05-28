@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { IAIRepository } from '../../core/domain/ports/out';
 import { AIConversation, Exercise, Lesson, ExerciseType, SkillType } from '../../core/domain/entities';
 import { HttpClientAdapter } from './http-client.adapter';
+
+interface RecommendLessonResponse {
+  lesson: Lesson;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AIApiAdapter implements IAIRepository {
@@ -29,6 +33,8 @@ export class AIApiAdapter implements IAIRepository {
   }
 
   recommendLesson(): Observable<Lesson | null> {
-    return this.http.get<Lesson | null>('/ai/recommendations/lesson', { requireAuth: true });
+    return this.http.get<RecommendLessonResponse | null>('/ai/recommendations/lesson', { requireAuth: true }).pipe(
+      map(res => res ? { ...res.lesson, id: Number(res.lesson.id) } : null),
+    );
   }
 }

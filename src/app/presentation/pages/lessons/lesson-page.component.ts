@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ILessonUseCase, IProgressUseCase } from '../../../core/domain/ports/in';
 import { LESSON_USE_CASE, PROGRESS_USE_CASE } from '../../../di/tokens';
-import { Lesson, Exercise } from '../../../core/domain/entities';
+import { Lesson, Exercise, LessonResponse, UserAnswerResponse } from '../../../core/domain/entities';
 import { LESSON_TYPE_LABELS } from '../../../core/domain/enums';
 
 @Component({
@@ -89,7 +89,7 @@ export class LessonPageComponent implements OnInit {
     @Inject(PROGRESS_USE_CASE) private readonly progressUseCase: IProgressUseCase,
     private readonly destroyRef: DestroyRef,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   get progressPercent(): number {
     if (!this.lesson?.exercises) return 0;
@@ -100,7 +100,13 @@ export class LessonPageComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.lessonUseCase.getLesson(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (data) => { this.lesson = data; if (data.exercises?.length) this.currentExercise = data.exercises[0]; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+      .subscribe({
+        next: (data: LessonResponse) => {
+          this.lesson = data.lesson;
+          if (data.lesson.exercises?.length) this.currentExercise = data.lesson.exercises[0];
+          this.cdr.detectChanges();
+        }, error: () => { this.cdr.detectChanges(); }
+      });
   }
 
   startLesson(): void {
@@ -117,7 +123,7 @@ export class LessonPageComponent implements OnInit {
     this.progressUseCase.submitAnswer(this.currentExercise.id, this.selectedAnswer)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (r) => { this.submitted = true; this.submitting = false; this.lastCorrect = r.is_correct ?? false; this.feedback = r.feedback || (this.lastCorrect ? 'Correct!' : 'Incorrect.'); if (this.lastCorrect) this.correctCount++; this.cdr.detectChanges(); },
+        next: (r: UserAnswerResponse) => { this.submitted = true; this.submitting = false; this.lastCorrect = r.answer?.is_correct ?? false; this.feedback = r.answer?.feedback || (this.lastCorrect ? 'Correct!' : 'Incorrect.'); if (this.lastCorrect) this.correctCount++; this.cdr.detectChanges(); },
         error: () => { this.submitting = false; this.submitted = true; this.lastCorrect = false; this.feedback = 'Failed to submit.'; this.cdr.detectChanges(); },
       });
   }

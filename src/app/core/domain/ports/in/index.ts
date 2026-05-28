@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, Word, UserWord, AIConversation, Dashboard, WordProgress, LessonType, ExerciseType, SkillType } from '../../entities';
+import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, Word, UserWord, AIConversation, Dashboard, WordProgress, LessonType, ExerciseType, SkillType, LessonResponse, UserAnswerResponse, UserLessonProgressResponse } from '../../entities';
 
 export interface IAuthUseCase {
   register(data: RegisterInput): Observable<{ user: User; token: string }>;
@@ -16,11 +16,11 @@ export interface IModuleUseCase {
   getModule(id: number): Observable<Module>;
 }
 
-export interface ILessonUseCase { getLesson(id: number): Observable<Lesson>; }
+export interface ILessonUseCase { getLesson(id: number): Observable<LessonResponse>; }
 export interface IProgressUseCase {
-  getOverview(): Observable<UserLessonProgress[]>;
+  getOverview(): Observable<UserLessonProgressResponse>;
   startLesson(lessonId: number): Observable<UserLessonProgress>;
-  submitAnswer(exerciseId: number, answer: string): Observable<UserAnswer>;
+  submitAnswer(exerciseId: number, answer: string): Observable<UserAnswerResponse>;
   completeLesson(lessonId: number, score: number): Observable<UserLessonProgress>;
 }
 

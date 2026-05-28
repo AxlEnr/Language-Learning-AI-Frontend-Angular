@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ILessonRepository } from '../../core/domain/ports/out';
-import { Lesson } from '../../core/domain/entities';
+import { Lesson, LessonResponse } from '../../core/domain/entities';
 import { HttpClientAdapter } from './http-client.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class LessonApiAdapter implements ILessonRepository {
-  constructor(private readonly http: HttpClientAdapter) {}
+  constructor(private readonly http: HttpClientAdapter) { }
 
-  getLesson(id: number): Observable<Lesson> {
-    return this.http.get<Lesson>(`/lessons/${id}`, { requireAuth: true });
+  getLesson(id: number): Observable<LessonResponse> {
+    return this.http.get<LessonResponse>(`/lessons/${id}`, { requireAuth: true }).pipe(
+      map((response: LessonResponse) => response)
+    );
   }
 }
