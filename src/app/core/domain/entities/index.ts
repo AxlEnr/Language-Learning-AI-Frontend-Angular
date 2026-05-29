@@ -7,6 +7,14 @@ export interface User {
   level_id: number | null;
   created_at: string;
   updated_at: string;
+  target_language?: Language;
+  stats?: UserStats;
+  skills?: UserSkill[];
+  level: Level | null;
+}
+
+export interface UserResponse {
+  user: User;
 }
 
 export interface Language {
@@ -168,10 +176,24 @@ export interface UserWord {
 export interface AIConversation {
   id: number;
   user_id: number;
-  context: Record<string, unknown> | null;
+  context: AIContext | null;
   messages?: AIMessage[];
   created_at: string;
   updated_at: string;
+}
+
+export interface AIContext {
+  topic: string;
+  difficulty: number;
+  language: string;
+}
+
+export interface AIConversationsResponse {
+  conversations: AIConversation[];
+}
+
+export interface AIConversationResponse {
+  conversation: AIConversation;
 }
 
 export interface AIMessage {
@@ -185,7 +207,7 @@ export interface AIMessage {
 }
 
 export interface Dashboard {
-  user: User;
+  user: UserResponse;
   skills: UserSkill[];
   stats: UserStats;
   modules_count: number;

@@ -37,7 +37,7 @@ export class DashboardUseCase implements IDashboardUseCase {
             tap(res => console.log('🕵️ 4. Stats respondieron:', res)),
             take(1)
           ),
-          modules: this.moduleRepo.getModules({ language_id: user.target_language_id ?? undefined }).pipe(
+          modules: this.moduleRepo.getModules({ language_id: user.user.target_language_id ?? undefined }).pipe(
             tap(res => console.log('🕵️ 5. Modules respondieron:', res)),
             take(1)
           ),

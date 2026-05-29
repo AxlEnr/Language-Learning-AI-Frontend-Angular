@@ -1,12 +1,12 @@
 import { Observable } from 'rxjs';
-import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType, UserSkillResponse, UserStatsResponse, ModulesResponse, WordProgressResponse, LessonResponse, UserAnswerResponse, UserLessonProgressResponse } from '../../entities';
+import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType, UserSkillResponse, UserStatsResponse, ModulesResponse, WordProgressResponse, LessonResponse, UserAnswerResponse, UserLessonProgressResponse, AIConversationResponse, AIConversationsResponse, UserResponse } from '../../entities';
 import { RegisterInput, LoginInput, UpdateProfileInput } from '../in';
 
 export interface IAuthRepository {
   register(data: RegisterInput): Observable<{ user: User; token: string }>;
   login(data: LoginInput): Observable<{ user: User; token: string }>;
   logout(): Observable<void>;
-  getCurrentUser(): Observable<User>;
+  getCurrentUser(): Observable<UserResponse>;
 }
 
 export interface ILanguageRepository {
@@ -30,9 +30,9 @@ export interface IProgressRepository {
 
 export interface IAIRepository {
   startConversation(topic?: string, difficulty?: number, context?: Record<string, unknown>): Observable<AIConversation>;
-  listConversations(): Observable<AIConversation[]>;
-  getConversation(conversationId: number): Observable<AIConversation>;
-  sendMessage(conversationId: number, message: string): Observable<{ message: string; tokens_used: number }>;
+  listConversations(): Observable<AIConversationsResponse>;
+  getConversation(conversationId: number): Observable<AIConversationResponse>;
+  sendMessage(conversationId: number, message: string): Observable<{ response: string; tokens_used: number }>;
   generateExercise(skill: SkillType, type: ExerciseType, topic?: string): Observable<Exercise>;
   recommendLesson(): Observable<Lesson | null>;
 }
@@ -46,7 +46,7 @@ export interface IVocabularyRepository {
 }
 
 export interface IUserRepository {
-  updateProfile(data: UpdateProfileInput): Observable<User>;
+  updateProfile(data: UpdateProfileInput): Observable<UserResponse>;
   getSkills(): Observable<UserSkillResponse>;
   getStats(): Observable<UserStatsResponse>;
 }

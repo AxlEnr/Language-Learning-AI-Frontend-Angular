@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { IAuthRepository, ITokenStorage } from '../domain/ports/out';
 import { IAuthUseCase, LoginInput, RegisterInput } from '../domain/ports/in';
-import { User } from '../domain/entities';
+import { User, UserResponse } from '../domain/entities';
 import { AUTH_REPOSITORY, TOKEN_STORAGE } from '../../di/tokens';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class AuthUseCase implements IAuthUseCase {
   constructor(
     @Inject(AUTH_REPOSITORY) private readonly authRepo: IAuthRepository,
     @Inject(TOKEN_STORAGE) private readonly tokenStorage: ITokenStorage,
-  ) {}
+  ) { }
 
   register(data: RegisterInput): Observable<{ user: User; token: string }> {
     return this.authRepo.register(data).pipe(
@@ -31,7 +31,7 @@ export class AuthUseCase implements IAuthUseCase {
     );
   }
 
-  getCurrentUser(): Observable<User> {
+  getCurrentUser(): Observable<UserResponse> {
     return this.authRepo.getCurrentUser();
   }
 

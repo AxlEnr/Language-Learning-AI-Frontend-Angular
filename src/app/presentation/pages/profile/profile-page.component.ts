@@ -61,7 +61,7 @@ export class ProfilePageComponent implements OnInit {
     @Inject(LANGUAGE_USE_CASE) private readonly languageUseCase: ILanguageUseCase,
     private readonly destroyRef: DestroyRef,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.languageUseCase.getLanguages()
@@ -69,7 +69,7 @@ export class ProfilePageComponent implements OnInit {
       .subscribe({ next: (l) => { this.languages = l; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
     this.authUseCase.getCurrentUser()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (u) => { this.profileData = { name: u.name, target_language_id: u.target_language_id }; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+      .subscribe({ next: (u) => { this.profileData = { name: u.user.name, target_language_id: u.user.target_language_id }; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
     this.userUseCase.getSkills()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (s) => { this.skills = s; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });

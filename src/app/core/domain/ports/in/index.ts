@@ -1,11 +1,11 @@
 import { Observable } from 'rxjs';
-import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, Word, UserWord, AIConversation, Dashboard, WordProgress, LessonType, ExerciseType, SkillType, LessonResponse, UserAnswerResponse, UserLessonProgressResponse } from '../../entities';
+import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, Word, UserWord, AIConversation, Dashboard, WordProgress, LessonType, ExerciseType, SkillType, LessonResponse, UserAnswerResponse, UserLessonProgressResponse, AIConversationResponse, AIConversationsResponse, UserResponse } from '../../entities';
 
 export interface IAuthUseCase {
   register(data: RegisterInput): Observable<{ user: User; token: string }>;
   login(data: LoginInput): Observable<{ user: User; token: string }>;
   logout(): Observable<void>;
-  getCurrentUser(): Observable<User>;
+  getCurrentUser(): Observable<UserResponse>;
   isAuthenticated(): boolean;
   getToken(): string | null;
 }
@@ -26,9 +26,9 @@ export interface IProgressUseCase {
 
 export interface IAIUseCase {
   startConversation(topic?: string, difficulty?: number, context?: Record<string, unknown>): Observable<AIConversation>;
-  listConversations(): Observable<AIConversation[]>;
-  getConversation(conversationId: number): Observable<AIConversation>;
-  sendMessage(conversationId: number, message: string): Observable<{ message: string; tokens_used: number }>;
+  listConversations(): Observable<AIConversationsResponse>;
+  getConversation(conversationId: number): Observable<AIConversationResponse>;
+  sendMessage(conversationId: number, message: string): Observable<{ response: string; tokens_used: number }>;
   generateExercise(skill: SkillType, type: ExerciseType, topic?: string): Observable<Exercise>;
   recommendLesson(): Observable<Lesson | null>;
 }
@@ -47,7 +47,7 @@ export interface ILanguageUseCase {
 }
 
 export interface IUserUseCase {
-  updateProfile(data: UpdateProfileInput): Observable<User>;
+  updateProfile(data: UpdateProfileInput): Observable<UserResponse>;
   getSkills(): Observable<UserSkill[]>;
   getStats(): Observable<UserStats>;
 }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IAIUseCase } from '../../../core/domain/ports/in';
 import { AI_USE_CASE } from '../../../di/tokens';
-import { AIConversation } from '../../../core/domain/entities';
+import { AIConversation, AIConversationResponse, AIConversationsResponse } from '../../../core/domain/entities';
 
 @Component({
   selector: 'app-ai-chat-page',
@@ -67,17 +67,24 @@ export class AIChatPageComponent implements OnInit, AfterViewChecked {
     @Inject(AI_USE_CASE) private readonly aiUseCase: IAIUseCase,
     private readonly destroyRef: DestroyRef,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.aiUseCase.listConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (c) => { this.conversations = c; this.cdr.detectChanges(); }, error: () => { this.cdr.detectChanges(); } });
+      .subscribe({
+        next: (response: AIConversationsResponse) => {
+          this.conversations = response.conversations;
+          this.cdr.detectChanges();
+        }, error: () => {
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   ngAfterViewChecked(): void { this.scrollToBottom(); }
 
-  private scrollToBottom(): void { try { const el = this.chatMessagesRef?.nativeElement; if (el) el.scrollTop = el.scrollHeight; } catch {} }
+  private scrollToBottom(): void { try { const el = this.chatMessagesRef?.nativeElement; if (el) el.scrollTop = el.scrollHeight; } catch { } }
 
   newConversation(): void {
     this.creatingNew = true;
@@ -91,7 +98,14 @@ export class AIChatPageComponent implements OnInit, AfterViewChecked {
     this.activeConversation = conv;
     this.aiUseCase.getConversation(conv.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (c) => { this.activeConversation = c; this.loadingMessages = false; this.cdr.detectChanges(); }, error: () => { this.loadingMessages = false; this.cdr.detectChanges(); } });
+      .subscribe({
+        next: (response: AIConversationResponse) => {
+          this.activeConversation = response.conversation;
+          this.loadingMessages = false;
+          this.cdr.detectChanges();
+        },
+        error: () => { this.loadingMessages = false; this.cdr.detectChanges(); }
+      });
   }
 
   sendMessage(): void {
@@ -104,12 +118,14 @@ export class AIChatPageComponent implements OnInit, AfterViewChecked {
     conv.messages.push({ id: 0, conversation_id: conv.id, role: 'user', message: msg, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
     this.aiUseCase.sendMessage(conv.id, msg)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (r) => {
-        if (!this.activeConversation) this.activeConversation = conv;
-        if (!this.activeConversation.messages) this.activeConversation.messages = [];
-        this.activeConversation.messages.push({ id: 0, conversation_id: conv.id, role: 'assistant', message: r.message, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-        this.sending = false;
-        this.cdr.detectChanges();
-      }, error: () => { this.sending = false; this.cdr.detectChanges(); } });
+      .subscribe({
+        next: (r) => {
+          if (!this.activeConversation) this.activeConversation = conv;
+          if (!this.activeConversation.messages) this.activeConversation.messages = [];
+          this.activeConversation.messages.push({ id: 0, conversation_id: conv.id, role: 'assistant', message: r.response, metadata: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+          this.sending = false;
+          this.cdr.detectChanges();
+        }, error: () => { this.sending = false; this.cdr.detectChanges(); }
+      });
   }
 }
