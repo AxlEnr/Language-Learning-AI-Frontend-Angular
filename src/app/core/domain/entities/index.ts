@@ -231,3 +231,32 @@ export type ExerciseType = 'multiple_choice' | 'fill_blank' | 'translation' | 's
 export type SkillType = 'vocabulary' | 'grammar' | 'listening' | 'speaking';
 export type ProgressStatus = 'locked' | 'in_progress' | 'completed';
 export type AIRole = 'user' | 'assistant';
+export type TTSVoice = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+export type TTSFormat = 'mp3' | 'opus' | 'aac' | 'flac';
+
+export interface SpeechToTextResult {
+  text: string;
+  language?: string;
+  duration?: number;
+}
+
+export interface TextToSpeechResult {
+  audio_url: string;
+  format: TTSFormat;
+}
+
+export interface PronunciationFeedback {
+  text: string;
+  expected: string;
+  similarity_score: number;
+  feedback: string;
+}
+
+export interface VoiceConversationResult {
+  recognized_text: string;
+  ai_response: string;
+  audio_url: string;
+  voice: TTSVoice;
+  duration?: number;
+  tokens_used?: number;
+}

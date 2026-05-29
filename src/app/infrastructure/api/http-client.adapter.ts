@@ -23,6 +23,10 @@ export class HttpClientAdapter {
     return this.http.post<T>(`${this.baseUrl}${path}`, body, this.buildOptions(options));
   }
 
+  postFormData<T>(path: string, formData: FormData, options?: RequestOptions): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}${path}`, formData, this.buildOptions(options, true));
+  }
+
   put<T>(path: string, body: unknown, options?: RequestOptions): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${path}`, body, this.buildOptions(options));
   }
@@ -31,15 +35,19 @@ export class HttpClientAdapter {
     return this.http.delete<T>(`${this.baseUrl}${path}`, this.buildOptions(options));
   }
 
-  private buildOptions(options?: RequestOptions): { headers: HttpHeaders; context: HttpContext } {
+  private buildOptions(options?: RequestOptions, isFormData = false): { headers: HttpHeaders; context: HttpContext } {
     const requireAuth = options?.requireAuth ?? true;
     const skipToast = options?.skipToast ?? false;
     const context = new HttpContext().set(SKIP_TOAST, skipToast);
-    return { headers: this.headers(requireAuth), context };
+    return { headers: this.headers(requireAuth, isFormData), context };
   }
 
-  private headers(requireAuth: boolean): HttpHeaders {
-    let headers = new HttpHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/json' });
+  private headers(requireAuth: boolean, isFormData = false): HttpHeaders {
+    let headers = new HttpHeaders();
+    if (!isFormData) {
+      headers = headers.set('Content-Type', 'application/json');
+    }
+    headers = headers.set('Accept', 'application/json');
     if (requireAuth) {
       const token = localStorage.getItem('auth_token');
       if (token) {

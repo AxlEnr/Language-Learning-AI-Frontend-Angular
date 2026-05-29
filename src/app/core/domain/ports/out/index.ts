@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType, UserSkillResponse, UserStatsResponse, ModulesResponse, WordProgressResponse, LessonResponse, UserAnswerResponse, UserLessonProgressResponse, AIConversationResponse, AIConversationsResponse, UserResponse } from '../../entities';
+import { User, Language, Module, Lesson, Exercise, UserLessonProgress, UserAnswer, UserSkill, UserStats, UserWord, AIConversation, Dashboard, WordProgress, ExerciseType, SkillType, UserSkillResponse, UserStatsResponse, ModulesResponse, WordProgressResponse, LessonResponse, UserAnswerResponse, UserLessonProgressResponse, AIConversationResponse, AIConversationsResponse, UserResponse, SpeechToTextResult, TextToSpeechResult, PronunciationFeedback, VoiceConversationResult, TTSVoice, TTSFormat } from '../../entities';
 import { RegisterInput, LoginInput, UpdateProfileInput } from '../in';
 
 export interface IAuthRepository {
@@ -35,6 +35,13 @@ export interface IAIRepository {
   sendMessage(conversationId: number, message: string): Observable<{ response: string; tokens_used: number }>;
   generateExercise(skill: SkillType, type: ExerciseType, topic?: string): Observable<Exercise>;
   recommendLesson(): Observable<Lesson | null>;
+}
+
+export interface IVoiceRepository {
+  speechToText(audio: Blob, language?: string): Observable<SpeechToTextResult>;
+  textToSpeech(text: string, voice?: TTSVoice, model?: string, format?: TTSFormat): Observable<TextToSpeechResult>;
+  evaluatePronunciation(audio: Blob, expectedText: string, language?: string): Observable<PronunciationFeedback>;
+  voiceConversation(conversationId: number, audio: Blob, voice?: TTSVoice, format?: TTSFormat, language?: string): Observable<VoiceConversationResult>;
 }
 
 export interface IVocabularyRepository {
